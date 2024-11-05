@@ -1,0 +1,417 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2820
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 ArialMT;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \
+\
+\pard\pardeftab720\sl259\slmult1\sa160\partightenfactor0
+
+\fs22 \cf2 PRACTICAL-2\
+PROBLEM STATEMENT:\
+2. Implementing Feedforward neural networks with Keras and TensorFlow \
+a. Import the necessary packages \
+b. Load the training and testing data (MNIST/CIFAR10) \
+c. Define the network architecture using Keras \
+d. Train the model using SGD\
+ e. Evaluate the network \
+f. Plot the training loss and accuracy\
+******************CODE***************************\
+# a. IMPORTING NECESSARY PACKAGES\
+import tensorflow as tf\
+from tensorflow import keras\
+import matplotlib.pyplot as plt\
+import random\
+\
+# b. LOAD THE TRAINING AND TESTING DATA (MNIST)\
+mnist = tf.keras.datasets.mnist\
+(x_train, y_train), (x_test, y_test) = mnist.load_data()\
+\
+# Normalize the images\
+x_train = x_train / 255.0\
+x_test = x_test / 255.0\
+\
+# Check the shape of the input images\
+img_len, img_width = x_train.shape[1:3]\
+print('Size of input image:', img_len, 'x', img_width)\
+\
+# c. DEFINE THE NETWORK ARCHITECTURE USING KERAS\
+model = keras.Sequential([\
+\'a0 \'a0 keras.layers.Flatten(input_shape=(28, 28)),\
+\'a0 \'a0 keras.layers.Dense(128, activation="relu"),\
+\'a0 \'a0 keras.layers.Dense(10, activation="softmax")\
+])\
+\
+# Display the model architecture\
+model.summary()\
+\
+# d. TRAIN THE MODEL USING SGD\
+model.compile(optimizer="sgd",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 loss="sparse_categorical_crossentropy",\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 metrics=['accuracy'])\
+\
+history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=3)\
+\
+# e. EVALUATE THE NETWORK\
+test_loss, test_acc = model.evaluate(x_test, y_test)\
+print("Loss=%.3f" % test_loss)\
+print("Accuracy=%.3f" % test_acc)\
+\
+# Display a random test image\
+n = random.randint(0, len(x_test) - 1)\
+plt.imshow(x_test[n], cmap='gray')\
+plt.title(f"Label: \{y_test[n]\}")\
+plt.show()\
+\
+# f. PLOT THE TRAINING LOSS AND ACCURACY\
+\
+# Plotting the Training and Validation Accuracy\
+plt.plot(history.history['accuracy'], label='Train Accuracy')\
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')\
+plt.title('Model Accuracy')\
+plt.xlabel('Epoch')\
+plt.ylabel('Accuracy')\
+plt.legend(loc='upper right')\
+plt.show()\
+\
+# Plotting the Training and Validation Loss\
+plt.plot(history.history['loss'], label='Train Loss')\
+plt.plot(history.history['val_loss'], label='Validation Loss')\
+plt.title('Model Loss')\
+plt.xlabel('Epoch')\
+plt.ylabel('Loss')\
+plt.legend(loc='upper left')\
+plt.show()\
+*****************************************\
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\fs24 \cf0 \
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\pard\pardeftab720\sl288\slmult1\partightenfactor0
+
+\f1\fs21 \cf2 PRACTICAL-3\
+PROBLEM STATEMENT\
+3. Build the Image classification model by dividing the model into following 4 stages: \
+a. Loading and preprocessing the image data\
+b. Defining the model\'92s architecture \
+c. Training the model d. Estimating the model\'92s performance\
+\
+\
+**********************CODE******************************\
+\
+\
+# Import Necessary Libraries\
+import tensorflow as tf\
+from tensorflow.keras.preprocessing.image import ImageDataGenerator\
+import os\
+import matplotlib.pyplot as plt\
+\
+# Define Paths\
+\
+base_dir = 'path_to_dataset'  # Change this to your dataset path\
+train_dir = os.path.join(base_dir, 'train')\
+test_dir = os.path.join(base_dir, 'test')\
+\
+# Data Augmentation and Preprocessing\
+\
+datagen = ImageDataGenerator(\
+    rescale=1.0/255.0,  # Normalize pixel values to [0, 1]\
+    rotation_range=40,\
+    width_shift_range=0.2,\
+    height_shift_range=0.2,\
+    shear_range=0.2,\
+    zoom_range=0.2,\
+    horizontal_flip=True,\
+    fill_mode='nearest',\
+    validation_split=0.2  # Split data for validation\
+)\
+\
+# Load Training Data\
+train_generator = datagen.flow_from_directory(\
+    train_dir,\
+    target_size=(150, 150),  # Resize images\
+    batch_size=32,\
+    class_mode='categorical',  # Use 'binary' for binary classification\
+    subset='training'\
+)\
+\
+# Load Validation Data\
+validation_generator = datagen.flow_from_directory(\
+    train_dir,\
+    target_size=(150, 150),\
+    batch_size=32,\
+    class_mode='categorical',  # Use 'binary' for binary classification\
+    subset='validation'\
+)\
+\
+# Define Model Architecture\
+num_classes = len(train_generator.class_indices)  # Number of classes\
+model = tf.keras.models.Sequential([\
+    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),\
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),\
+    \
+    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),\
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),\
+    \
+    tf.keras.layers.Conv2D(128, (3, 3), activation='relu'),\
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),\
+    \
+    tf.keras.layers.Flatten(),\
+    tf.keras.layers.Dense(512, activation='relu'),\
+    tf.keras.layers.Dense(num_classes, activation='softmax')  # Change num_classes to the number of classes\
+])\
+\
+# Compile the Model\
+model.compile(optimizer='adam',\
+              loss='categorical_crossentropy',  # Use 'binary_crossentropy' for binary classification\
+              metrics=['accuracy'])\
+\
+# Train the Model\
+history = model.fit(\
+    train_generator,\
+    steps_per_epoch=train_generator.samples // train_generator.batch_size,\
+    validation_data=validation_generator,\
+    validation_steps=validation_generator.samples // validation_generator.batch_size,\
+    epochs=20  # Adjust the number of epochs as needed\
+)\
+\
+# Evaluate the Model\
+val_loss, val_accuracy = model.evaluate(validation_generator)\
+print(f"Validation Loss: \{val_loss:.4f\}")\
+print(f"Validation Accuracy: \{val_accuracy:.4f\}")\
+\
+# Visualize Training History\
+# Plot training and validation accuracy\
+plt.plot(history.history['accuracy'], label='Training Accuracy')\
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')\
+plt.title('Model Accuracy')\
+plt.ylabel('Accuracy')\
+plt.xlabel('Epoch')\
+plt.legend()\
+plt.show()\
+\
+# Plot training and validation loss\
+plt.plot(history.history['loss'], label='Training Loss')\
+plt.plot(history.history['val_loss'], label='Validation Loss')\
+plt.title('Model Loss')\
+plt.ylabel('Loss')\
+plt.xlabel('Epoch')\
+plt.legend()\
+plt.show()\
+*****************************************************************
+\f0\fs24 \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
+\pard\pardeftab720\sl312\slmult1\partightenfactor0
+
+\f1\fs21 \cf2 \
+\
+\
+\
+\
+\
+\
+PRACTICAL-4\
+PROBLEM STATEMENT:\
+4.Use Autoencoder to implement anomaly detection. Build the model by using:\
+a. Import required libraries \
+b. Upload / access the dataset \
+c. Encoder converts it into latent representation\
+d. Decoder networks convert it back to the original input\
+e. Compile the models with Optimizer, Loss, and Evaluation Metrics\
+\
+\
+***************************CODE******************************************\
+\
+\
+# a. IMPORT REQUIRED LIBRARIES\
+\
+import numpy as np\
+import tensorflow as tf\
+from tensorflow.keras import layers, models\
+import matplotlib.pyplot as plt\
+import random\
+\
+# b. LOAD THE DATASET -Using MNIST digits dataset,which has images of digits as normal data\
+(x_train, _), (x_test, _) = tf.keras.datasets.mnist.load_data()\
+\
+# Normalize and reshape data\
+x_train = x_train.astype('float32') / 255.\
+x_test = x_test.astype('float32') / 255.\
+x_train = x_train.reshape((len(x_train), 28, 28, 1))\
+x_test = x_test.reshape((len(x_test), 28, 28, 1))\
+\
+# c. BUILD THE ENCODER\
+\
+input_img = tf.keras.Input(shape=(28, 28, 1))\
+x = layers.Flatten()(input_img)\
+x = layers.Dense(128, activation='relu')(x)\
+latent = layers.Dense(64, activation='relu')(x)  # Latent representation\
+\
+# d. BUILD THE DECODER\
+x = layers.Dense(128, activation='relu')(latent)\
+x = layers.Dense(28 * 28, activation='sigmoid')(x)\
+output_img = layers.Reshape((28, 28, 1))(x)\
+\
+\
+\
+# Combine Encoder and Decoder into Autoencoder Model\
+autoencoder = models.Model(input_img, output_img)\
+\
+# e. COMPILE THE MODEL\
+autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])\
+\
+# TRAIN THE MODEL\
+history = autoencoder.fit(x_train, x_train, epochs=10, batch_size=64, validation_split=0.1)\
+\
+# EVALUATE THE MODEL FOR ANOMALY DETECTION\
+reconstructions = autoencoder.predict(x_test)\
+reconstruction_error = np.mean(np.square(x_test - reconstructions), axis=(1, 2, 3))\
+\
+\
+\
+# Set an anomaly threshold (mean + 2 std deviations)\
+threshold = np.mean(reconstruction_error) + 2 * np.std(reconstruction_error)\
+anomalies = reconstruction_error > threshold\
+\
+# f. VISUALIZE RESULTS\
+# Plot a histogram of reconstruction errors\
+plt.hist(reconstruction_error, bins=50)\
+plt.axvline(threshold, color='r', linestyle='--', label='Anomaly threshold')\
+plt.xlabel("Reconstruction Error")\
+plt.ylabel("Number of Samples")\
+plt.legend()\
+plt.show()\
+\
+# Show random normal and anomalous samples\
+normal_samples = x_test[~anomalies]\
+anomalous_samples = x_test[anomalies]\
+\
+print("Number of anomalies detected:", len(anomalous_samples))\
+\
+# Display a random normal sample\
+n = random.randint(0, len(normal_samples) - 1)\
+plt.imshow(normal_samples[n].reshape(28, 28), cmap='gray')\
+plt.title("Random Normal Sample")\
+plt.show()\
+\
+# Display a random anomaly sample, if any\
+if len(anomalous_samples) > 0:\
+    n = random.randint(0, len(anomalous_samples) - 1)\
+    plt.imshow(anomalous_samples[n].reshape(28, 28), cmap='gray')\
+    plt.title("Random Anomalous Sample")\
+    plt.show()\
+else:\
+    print("No anomalies detected in the test dataset.\'94)\
+\
+****************************************************************\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\pard\pardeftab720\sl259\slmult1\sa160\partightenfactor0
+\cf2 PRACTICAL-5\
+PROBLEM STATEMENT:\
+5. Implement the Continuous Bag of Words (CBOW) Model. Stages can be: \
+a. Data preparation \
+b. Generate training data\
+c. Train model\
+d. Output\
+*********************CODE*****************************\
+import numpy as np\
+import tensorflow as tf\
+from tensorflow.keras.preprocessing.text import Tokenizer\
+from tensorflow.keras.models import Sequential\
+from tensorflow.keras.layers import Embedding, Lambda, Dense\
+from tensorflow.keras import backend as K\
+import matplotlib.pyplot as plt\
+\
+# Example text data\
+text = "This is a simple example sentence for learning a Continuous Bag of Words model with TensorFlow."\
+\
+# a. DATA PREPARATION\
+# Tokenize the text\
+tokenizer = Tokenizer()\
+tokenizer.fit_on_texts([text])\
+word2idx = tokenizer.word_index\
+idx2word = \{v: k for k, v in word2idx.items()\}\
+vocab_size = len(word2idx) + 1  # Add 1 for padding\
+\
+# Convert text to sequence of word indices\
+sequences = tokenizer.texts_to_sequences([text])[0]\
+\
+# b. GENERATE TRAINING DATA\
+# Generate context-target pairs\
+window_size = 2\
+data = []\
+for i in range(window_size, len(sequences) - window_size):\
+    context = [sequences[i - j] for j in range(1, window_size + 1)] + \\\
+              [sequences[i + j] for j in range(1, window_size + 1)]\
+    target = sequences[i]\
+    data.append((context, target))\
+\
+# Convert data into input and output arrays\
+x_train = np.array([item[0] for item in data])\
+y_train = np.array([item[1] for item in data])\
+\
+# c. TRAIN THE MODEL\
+# Model parameters\
+embedding_dim = 50\
+\
+# CBOW model structure\
+model = Sequential([\
+    Embedding(input_dim=vocab_size, output_dim=embedding_dim),  # Embedding layer without input_length\
+    Lambda(lambda x: K.mean(x, axis=1)),  # Averaging context embeddings\
+    Dense(vocab_size, activation='softmax')  # Predict target word\
+])\
+\
+# Compile the model\
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')\
+model.summary()\
+\
+# Train the model and capture the history\
+history = model.fit(x_train, y_train, epochs=100, verbose=2)\
+\
+# d. OUTPUT\
+# Get the word embeddings from the trained model\
+embedding_layer = model.layers[0]\
+weights = embedding_layer.get_weights()[0]\
+\
+# Print the embedding for a sample word\
+sample_word = "learning"\
+print(f"Embedding for '\{sample_word\}':\\n", weights[word2idx[sample_word]])\
+\
+# Display the learned embeddings for each word\
+for word, index in word2idx.items():\
+    print(f"Word: \{word\}, Embedding: \{weights[index]\}")\
+\
+# e. PLOT TRAINING LOSS\
+# Plot training loss\
+plt.plot(history.history['loss'], label='loss')\
+plt.title('Model Loss')\
+plt.ylabel('Loss')\
+plt.xlabel('Epoch')\
+plt.legend()\
+plt.show()}
